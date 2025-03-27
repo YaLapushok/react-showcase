@@ -1,0 +1,7 @@
+name: "react-showcase"
+services:
+  app:
+    # restart: always
+    build: ./react-showcase
+    ports:
+      - "127.0.0.1:80:3000"
