@@ -9,7 +9,7 @@ RUN --mount=type=cache,target=/root/.npm npm install
 
 COPY next.config.ts postcss.config.mjs tsconfig.json .
 
-COPY public/ public/
+# COPY public/ public/
 
 COPY src/ src/
 
