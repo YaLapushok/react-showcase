@@ -8,8 +8,7 @@ services:
       - "5446:1221"
     expose:
       - 1221
-    env_file:
-      - ./react-showcase/.env
+
   app:
     # restart: always
     build: ./react-showcase
