@@ -1,19 +1,12 @@
-name: "react-showcase"
 services:
-    db:
-        image: postgres:15
-        container_name: db_app
-        command: -p 1221
-        ports:
-          - "5446:1221"
-        expose:
-          - 1221
-        env_file:
-          - ./react-showcase/.env
   api:
     build: ./api
     ports:
       - "42424:42424"
+    depends_on:
+      - db
+    env_file:
+      - ./react-showcase/.env
     develop:
       watch:
         - action: sync+restart
@@ -23,10 +16,33 @@ services:
             - ./api/requirements.txt
         - action: rebuild
           path: ./api/requirements.txt
+    working_dir: /api
+    command: uvicorn main:app --host 0.0.0.0 --port 42424
+
+  db:
+    image: postgres:15
+    container_name: db_app
+    environment:
+      POSTGRES_DB: ${DB_NAME:-postgres}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    expose:
+      - 1221
+    command: ["postgres", "-p", "1221"]
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - ./react-showcase/.env
+    restart: always
+
   app:
     # restart: always
     build: ./react-showcase
     ports:
       - "127.0.0.1:80:3000"
-    links:
+    depends_on:
       - api
+volumes:
+  postgres_data:

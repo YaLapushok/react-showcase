@@ -1,4 +1,4 @@
-FROM python:3.13
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.11
 
 RUN --mount=type=bind,source=requirements.txt,target=/tmp/requirements.txt \
     --mount=type=cache,target=/root/.cache/pip \
@@ -10,4 +10,4 @@ COPY *.py .
 
 EXPOSE 42424
 
-CMD ["fastapi", "run", "main.py", "--port", "42424"]
+CMD ["uvicorn", "main:app", "--port", "42424"]
