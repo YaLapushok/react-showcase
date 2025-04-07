@@ -18,6 +18,11 @@ export function AuthForm({
     }[state];
 
     const actionLabel = heading;
+    const formAction = {
+        "login": "/login",
+        "register": "/register",
+        "password": "/reset-password",
+    }[state];
 
     return (
         <main
@@ -26,22 +31,25 @@ export function AuthForm({
             <h1 className="text-3xl font-bold mb-6 text-gray-200">
                 {heading}
             </h1>
-            <form className="space-y-4 w-full max-w-md">
+            <form className="space-y-4 w-full max-w-md" method="POST" action={formAction}>
                 {state === "register" && (
                     <input
                         type="text"
+                        name="username"
                         placeholder="Username"
                         className={inputCls}
                     />
                 )}
                 <input
                     type="email"
+                    name="email"
                     placeholder="Email"
                     className={inputCls}
                 />
-                {["login", "password"].includes(state) &&
+                {["login", "register"].includes(state) &&
                     <input
                         type="password"
+                        name="password"
                         placeholder="Password"
                         className={inputCls}
                     />

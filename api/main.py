@@ -1,6 +1,7 @@
 import secrets
+from typing import Annotated
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, APIRouter
 
 from .db import UserRegistration, does_user_exist, create_user, update_user_to_active
 from .email import send_confirmation_email
@@ -13,11 +14,13 @@ def create_user_confirmation_token() -> str:
     return secrets.token_urlsafe(32)
 
 
-app = FastAPI(root_path="/v0")
+app = FastAPI()
+api = APIRouter(prefix="/api/v0")
+app.include_router(api)
 
 
-@app.post("/users")
-async def _(user: UserRegistration, background_tasks: BackgroundTasks):
+@api.post("/users")
+async def post_users(user: UserRegistration, background_tasks: BackgroundTasks):
     if await does_user_exist(user.email):
         raise HTTPException(status_code=400, detail="Email already registered")
 
@@ -34,7 +37,7 @@ async def _(user: UserRegistration, background_tasks: BackgroundTasks):
 
 
 @app.get("/confirm_email")
-async def _(token: str):
+async def get_confirm_email(token: str):
     if await update_user_to_active(token) is None:
         raise HTTPException(status_code=400, detail="Invalid or expired token")
 
