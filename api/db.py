@@ -1,6 +1,7 @@
 import os
 from contextlib import closing
 
+import asyncpg
 from pydantic import BaseModel
 
 

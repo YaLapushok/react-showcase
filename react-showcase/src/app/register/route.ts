@@ -7,7 +7,7 @@ export async function POST(request: Request) {
     return await fetch("http://api:42424/api/v0/users", {
         method: "POST",
         headers: {
-            "Content-Type": "text/json",
+            "Content-Type": "application/json",
         },
         body: JSON.stringify({ username, email, password }),
     });
