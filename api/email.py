@@ -9,6 +9,8 @@ SMTP_PORT = 587
 
 
 def send_confirmation_email(email: str, link: str):
+    if not SMTP_USER or not SMTP_PASSWORD:
+        raise RuntimeError("SMTP credentials are not set. Check SMTP_USER and SMTP_PASSWORD environment variables.")
     message = MIMEText(f"Для подтверждения регистрации перейдите по ссылке: {link}")
     message["Subject"] = "Подтверждение регистрации"
     message["From"] = SMTP_USER

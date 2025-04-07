@@ -1,18 +1,49 @@
 import os
-from contextlib import closing
+from contextlib import asynccontextmanager
 
 import asyncpg
 from pydantic import BaseModel
 
 
-POSTGRES_DB = os.getenv("POSTGRES_DB") 
-POSTGRES_USER = os.getenv("POSTGRES_USER") 
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD") 
-
-
 async def connect_to_database():
     DATABASE_URL = "postgresql://postgres:postgres@db:5432/postgres"
-    return await asyncpg.connect(DATABASE_URL)
+    connection = await asyncpg.connect(DATABASE_URL)
+
+    # Проверяем существование таблицы users
+    table_exists = await connection.fetchval(
+        """
+        SELECT EXISTS (
+            SELECT FROM information_schema.tables 
+            WHERE table_name = 'users'
+        );
+        """
+    )
+
+    if not table_exists:
+        print("Creating table 'users'")
+        await connection.execute(
+            """
+            CREATE TABLE users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(255) NOT NULL,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                password VARCHAR(255) NOT NULL,
+                confirmation_token VARCHAR(255),
+                is_active BOOLEAN DEFAULT FALSE
+            );
+            """
+        )
+
+    return connection
+
+
+@asynccontextmanager
+async def get_connection():
+    connection = await connect_to_database()
+    try:
+        yield connection
+    finally:
+        await connection.close()
 
 
 class UserRegistration(BaseModel):
@@ -22,7 +53,7 @@ class UserRegistration(BaseModel):
 
 
 async def does_user_exist(email: str) -> bool:
-    with closing(await connect_to_database()) as connection:
+    async with get_connection() as connection:
         user_id = await connection.fetchrow(
             "SELECT id FROM users WHERE email = $1",
             email
@@ -31,12 +62,12 @@ async def does_user_exist(email: str) -> bool:
 
 
 async def create_user(user: UserRegistration, confirmation_token: str) -> int | None:
-    with closing(await connect_to_database()) as connection:
+    async with get_connection() as connection:
         user_id = await connection.fetchrow(
             """
-                INSERT INTO users (username, email, password, confirmation_token, is_active)
-                VALUES ($1, $2, $3, $4, FALSE)
-                RETURNING id
+            INSERT INTO users (username, email, password, confirmation_token, is_active)
+            VALUES ($1, $2, $3, $4, FALSE)
+            RETURNING id
             """,
             user.username,
             user.email,
@@ -47,15 +78,14 @@ async def create_user(user: UserRegistration, confirmation_token: str) -> int | 
 
 
 async def update_user_to_active(confirmation_token: str) -> int | None:
-    with closing(await connect_to_database()) as connection:
+    async with get_connection() as connection:
         user_id = await connection.fetchrow(
             """
-                UPDATE users
-                SET is_active = TRUE, confirmation_token = NULL
-                WHERE confirmation_token = $1 AND is_active = FALSE
-                RETURNING id
+            UPDATE users
+            SET is_active = TRUE, confirmation_token = NULL
+            WHERE confirmation_token = $1 AND is_active = FALSE
+            RETURNING id
             """,
             confirmation_token,
         )
         return user_id
-
