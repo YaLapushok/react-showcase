@@ -15,8 +15,17 @@ def create_user_confirmation_token() -> str:
 
 
 app = FastAPI()
-api = APIRouter(prefix="/api/v0")
-app.include_router(api)
+
+
+@app.get("/confirm_email")
+async def get_confirm_email(token: str):
+    if await update_user_to_active(token) is None:
+        raise HTTPException(status_code=400, detail="Invalid or expired token")
+
+    return {"message": "Account confirmed successfully"}
+
+
+api = APIRouter()
 
 
 @api.post("/users")
@@ -36,10 +45,8 @@ async def post_users(user: UserRegistration, background_tasks: BackgroundTasks):
     return {"message": "Confirmation email sent", "user_id": user_id}
 
 
-@app.get("/confirm_email")
-async def get_confirm_email(token: str):
-    if await update_user_to_active(token) is None:
-        raise HTTPException(status_code=400, detail="Invalid or expired token")
-
-    return {"message": "Account confirmed successfully"}
-
+app.include_router(
+    api,
+    prefix="/api/v0",
+    tags=["users"],
+)
