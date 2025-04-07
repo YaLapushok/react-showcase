@@ -21,7 +21,7 @@ class UserRegistration(BaseModel):
 
 
 async def does_user_exist(email: str) -> bool:
-    with closing(connect_to_database()) as connection:
+    with closing(await connect_to_database()) as connection:
         user_id = await connection.fetchrow(
             "SELECT id FROM users WHERE email = $1",
             email
@@ -30,7 +30,7 @@ async def does_user_exist(email: str) -> bool:
 
 
 async def create_user(user: UserRegistration, confirmation_token: str) -> int | None:
-    with closing(connect_to_database()) as connection:
+    with closing(await connect_to_database()) as connection:
         user_id = await connection.fetchrow(
             """
                 INSERT INTO users (username, email, password, confirmation_token, is_active)
@@ -46,7 +46,7 @@ async def create_user(user: UserRegistration, confirmation_token: str) -> int | 
 
 
 async def update_user_to_active(confirmation_token: str) -> int | None:
-    with closing(connect_to_database()) as connection:
+    with closing(await connect_to_database()) as connection:
         user_id = await connection.fetchrow(
             """
                 UPDATE users
