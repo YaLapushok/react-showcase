@@ -1,9 +1,26 @@
 name: "react-showcase"
 services:
+  db:
+    # restart: always
+    image: postgres:17
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${DB_NAME:-postgres}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    command: ["postgres", "-p", "${DB_PORT:-1221}"]
   api:
     build: ./api
+    depends_on:
+      - db
     ports:
       - "42424:42424"
+    environment:
+      SMTP_USER: ${SMTP_USER:?error}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:?error}
     develop:
       watch:
         - action: sync+restart
@@ -16,7 +33,10 @@ services:
   app:
     # restart: always
     build: ./react-showcase
+    depends_on:
+      - api
     ports:
       - "127.0.0.1:80:3000"
-    links:
-      - api
+
+volumes:
+  postgres_data:
