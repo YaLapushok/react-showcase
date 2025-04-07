@@ -1,6 +1,8 @@
 import os
 from contextlib import closing
 
+from pydantic import BaseModel
+
 
 POSTGRES_DB = os.getenv("POSTGRES_DB") 
 POSTGRES_USER = os.getenv("POSTGRES_USER") 
@@ -10,6 +12,12 @@ POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 async def connect_to_database():
     DATABASE_URL = "postgresql://postgres:postgres@db:5432/postgres"
     return await asyncpg.connect(DATABASE_URL)
+
+
+class UserRegistration(BaseModel):
+    username: str
+    email: str
+    password: str
 
 
 async def does_user_exist(email: str) -> bool:
