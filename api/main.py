@@ -2,8 +2,9 @@ import secrets
 from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks, APIRouter
+from pydantic import BaseModel
 
-from .db import UserRegistration, does_user_exist, create_user, update_user_to_active
+from .db import does_user_exist, create_user, update_user_to_active
 from .email import send_confirmation_email
 
 
@@ -12,6 +13,12 @@ HOST = "http://localhost:3000"
 
 def create_user_confirmation_token() -> str:
     return secrets.token_urlsafe(32)
+
+
+class UserRegistration(BaseModel):
+    username: str
+    email: str
+    password: str
 
 
 app = FastAPI()
