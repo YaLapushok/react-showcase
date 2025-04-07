@@ -8,10 +8,11 @@ from pydantic import BaseModel
 POSTGRES_DB = os.getenv("POSTGRES_DB") 
 POSTGRES_USER = os.getenv("POSTGRES_USER") 
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD") 
+POSTGRES_PORT = os.getenv("POSTGRES_PORT") or 1221
 
 
 async def connect_to_database():
-    DATABASE_URL = "postgresql://postgres:postgres@db:5432/postgres"
+    DATABASE_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@db:{POSTGRES_PORT}/{POSTGRES_DB}"
     return await asyncpg.connect(DATABASE_URL)
 
 

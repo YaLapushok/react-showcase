@@ -3,8 +3,6 @@ services:
   db:
     # restart: always
     image: postgres:17
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_DB: ${DB_NAME:-postgres}
       POSTGRES_USER: ${DB_USER:-postgres}
@@ -21,6 +19,9 @@ services:
     environment:
       SMTP_USER: ${SMTP_USER:?error}
       SMTP_PASSWORD: ${SMTP_PASSWORD:?error}
+      POSTGRES_DB: ${DB_NAME:-postgres}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     develop:
       watch:
         - action: sync+restart
