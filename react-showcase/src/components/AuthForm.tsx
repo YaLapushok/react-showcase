@@ -109,14 +109,14 @@ export function AuthForm() {
                 </p>
             }
 
-            {state === "login" &&
+            {["login", "password"].includes(state) &&
                 <p className="mt-4 text-sm text-gray-400">
-                    Забыли пароль?{" "}
+                    {state === "login" ? "Забыли пароль?" : "Помните пароль?"}{" "}
                     <button
-                        onClick={() => setState("password")}
+                        onClick={state === "login" ? () => setState("password") : () => setState("login")}
                         className="text-blue-400 hover:underline cursor-pointer"
                     >
-                        Восстановить пароль
+                        {state === "login" ? "Восстановить пароль" : "Войти"}
                     </button>
                 </p>
             }
