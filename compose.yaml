@@ -17,8 +17,6 @@ services:
     build: ./api
     depends_on:
       - db
-    ports:
-      - "42424:42424"
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
       SMTP_USER: ${SMTP_USER:?error}

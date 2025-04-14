@@ -8,6 +8,6 @@ WORKDIR /api
 
 COPY *.py .
 
-EXPOSE 42424
+EXPOSE 80
 
-CMD ["fastapi", "run", "main.py", "--port", "42424"]
+CMD ["fastapi", "run", "main.py", "--port", "80"]
