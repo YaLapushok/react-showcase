@@ -1,11 +1,12 @@
-import os
 import smtplib
 from email.mime.text import MIMEText
 import logging
 
+from .utils import get_env_var
+
 # Настройки SMTP
-SMTP_USER: str = os.getenv("SMTP_USER")
-SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD")
+SMTP_USER: str = get_env_var("SMTP_USER")
+SMTP_PASSWORD: str = get_env_var("SMTP_PASSWORD")
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587
 

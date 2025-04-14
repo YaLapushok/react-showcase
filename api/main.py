@@ -1,4 +1,3 @@
-import os
 import logging
 from fastapi import FastAPI, HTTPException, APIRouter, BackgroundTasks
 from .db import (
@@ -17,6 +16,7 @@ from .db import (
     update_confirmation_token
 )
 from .email import send_confirmation_email, send_password_reset_email
+from .utils import get_env_var
 
 # Настройка логирования
 logging.basicConfig(
@@ -28,7 +28,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Конфигурация
-WEBSITE_ORIGIN = os.getenv("APP_HOST", "http://localhost")
+WEBSITE_ORIGIN = get_env_var("APP_HOST", "http://localhost")
 
 # Создание приложения
 app = FastAPI()
