@@ -6,7 +6,6 @@ COPY package.json package-lock.json .
 
 RUN --mount=type=cache,target=/root/.npm npm install
 
-
 COPY next.config.ts postcss.config.mjs tsconfig.json .
 
 # COPY public/ public/
@@ -15,6 +14,6 @@ COPY src/ src/
 
 EXPOSE 3000
 
-RUN ["npm", "run", "build"]
+RUN --mount=type=cache,target=/app/.next/cache npm run build
 
 CMD ["npm", "run", "start", "--", "-H", "0.0.0.0", "--port", "3000"]
