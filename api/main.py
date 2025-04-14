@@ -28,7 +28,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Конфигурация
-HOST = os.getenv("APP_HOST", "http://localhost")
+WEBSITE_ORIGIN = os.getenv("APP_HOST", "http://localhost")
 
 # Создание приложения
 app = FastAPI()
@@ -82,7 +82,7 @@ async def post_users(user: UserRegistration, background_tasks: BackgroundTasks):
 
     # Создаем токен подтверждения
     confirmation_token = create_confirmation_token()
-    confirmation_link = f"{HOST}/api/v0/confirm_email?token={confirmation_token}"
+    confirmation_link = f"{WEBSITE_ORIGIN}/api/v0/confirm_email?token={confirmation_token}"
 
     # Создаем пользователя
     user_id = await create_user(user, confirmation_token)
@@ -128,7 +128,7 @@ async def resend_confirmation(email: str, background_tasks: BackgroundTasks):
             raise HTTPException(status_code=400, detail="Пользователь не найден или уже активирован")
 
     # Формируем ссылку для подтверждения
-    confirmation_link = f"{HOST}/api/v0/confirm_email?token={token}"
+    confirmation_link = f"{WEBSITE_ORIGIN}/api/v0/confirm_email?token={token}"
 
     # Отправляем письмо
     background_tasks.add_task(send_confirmation_email, email, confirmation_link)
@@ -174,7 +174,7 @@ async def request_password_reset(email: str, background_tasks: BackgroundTasks):
 
     # Создаем токен для сброса пароля
     reset_token = create_confirmation_token()
-    reset_link = f"{HOST}/api/v0/reset_password?token={reset_token}"
+    reset_link = f"{WEBSITE_ORIGIN}/api/v0/reset_password?token={reset_token}"
 
     # Сохраняем токен
     await save_password_reset_token(user["id"], reset_token)
