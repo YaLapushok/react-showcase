@@ -2,12 +2,8 @@ import React, { useState } from "react";
 
 const inputCls = "w-full p-3 bg-gray-800 border border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-white";
 
-interface AuthFormProps {
-    state: "login" | "register" | "password";
-    setState: (newState: "login" | "register" | "password") => void;
-}
-
-export function AuthForm({ state, setState }: AuthFormProps) {
+export function AuthForm() {
+    const [state, setState] = useState<"login" | "register" | "password">("login");
     const [message, setMessage] = useState<string | null>(null);
     const [isError, setIsError] = useState<boolean>(false);
 
