@@ -14,9 +14,37 @@ export async function POST(request: Request) {
         body: JSON.stringify({ username, email, password }),
     });
 
-    if (response.ok) {
-        redirect("/");
+    const data = await response.json();
+
+    if (data.status === "success") {
+        return new Response(JSON.stringify({
+            status: "success",
+            message: "Пользователь успешно зарегистрирован"
+        }), {
+            status: 200,
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
     }
 
-    return response.json();
+    if (data.user_exists) {
+        return new Response(JSON.stringify({
+            status: "error",
+            message: "Пользователь с таким email уже зарегистрирован",
+            is_active: data.is_active
+        }), {
+            status: 400,
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+    }
+
+    return new Response(JSON.stringify(data), {
+        status: response.status,
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
 }

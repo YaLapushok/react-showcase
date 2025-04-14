@@ -40,7 +40,7 @@ def send_confirmation_email(email: str, link: str):
     try:
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
             server.starttls()
-            server.login(SM_USER, SMTP_PASSWORD)
+            server.login(SMTP_USER, SMTP_PASSWORD)
             server.sendmail(SMTP_USER, [email], message.as_string())
         logger.info(f"Confirmation email successfully sent to {email}")
     except Exception as e:

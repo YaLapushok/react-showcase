@@ -1,20 +1,20 @@
-import type React from "react";
-
+import React, { useState } from "react";
 
 const inputCls = "w-full p-3 bg-gray-800 border border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-white";
 
+interface AuthFormProps {
+    state: "login" | "register" | "password";
+    setState: (newState: "login" | "register" | "password") => void;
+}
 
-export function AuthForm({
-    state,
-    setState,
-}: {
-    state: "login" | "register" | "password",
-    setState: (newState: typeof state) => void,
-}) {
+export function AuthForm({ state, setState }: AuthFormProps) {
+    const [message, setMessage] = useState<string | null>(null);
+    const [isError, setIsError] = useState<boolean>(false);
+
     const heading = {
-        "login": "Login",
-        "register": "Register",
-        "password": "Reset password",
+        "login": "Вход",
+        "register": "Регистрация",
+        "password": "Сброс пароля",
     }[state];
 
     const actionLabel = heading;
@@ -24,19 +24,46 @@ export function AuthForm({
         "password": "/reset-password",
     }[state];
 
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setMessage(null);
+        setIsError(false);
+
+        const formData = new FormData(e.currentTarget);
+        const response = await fetch(formAction, {
+            method: "POST",
+            body: formData,
+        });
+
+        const data = await response.json();
+
+        if (data.status === "success") {
+            setMessage(data.message);
+            setIsError(false);
+        } else {
+            setMessage(data.message);
+            setIsError(true);
+        }
+    };
+
     return (
-        <main
-            className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white"
-        >
+        <main className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
             <h1 className="text-3xl font-bold mb-6 text-gray-200">
                 {heading}
             </h1>
-            <form className="space-y-4 w-full max-w-md" method="POST" action={formAction}>
+
+            {message && (
+                <div className={`w-full max-w-md mb-4 p-4 rounded-md ${isError ? 'bg-red-500' : 'bg-green-500'} text-white`}>
+                    {message}
+                </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="w-full max-w-md space-y-4">
                 {state === "register" && (
                     <input
                         type="text"
                         name="username"
-                        placeholder="Username"
+                        placeholder="Имя пользователя"
                         className={inputCls}
                     />
                 )}
@@ -50,14 +77,13 @@ export function AuthForm({
                     <input
                         type="password"
                         name="password"
-                        placeholder="Password"
+                        placeholder="Пароль"
                         className={inputCls}
                     />
                 }
                 <button
                     type="submit"
-                    className={`w-full p-3 text-white rounded ${state === "login" ? "bg-blue-500 hover:bg-blue-600" : "bg-green-500 hover:bg-green-600"
-                        }`}
+                    className={`w-full p-3 text-white rounded ${state === "login" ? "bg-blue-500 hover:bg-blue-600" : "bg-green-500 hover:bg-green-600"}`}
                 >
                     {actionLabel}
                 </button>
@@ -65,23 +91,24 @@ export function AuthForm({
 
             {["login", "register"].includes(state) &&
                 <p className="mt-4 text-sm text-gray-400">
-                    {state === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
+                    {state === "login" ? "Нет аккаунта?" : "Уже есть аккаунт?"}{" "}
                     <button
                         onClick={state === "login" ? () => setState("register") : () => setState("login")}
                         className="text-blue-400 hover:underline cursor-pointer"
                     >
-                        {state === "login" ? "Register here" : "Login here"}
+                        {state === "login" ? "Зарегистрироваться" : "Войти"}
                     </button>
                 </p>
             }
-            {["login", "password"].includes(state) &&
+
+            {state === "login" &&
                 <p className="mt-4 text-sm text-gray-400">
-                    {state === "password" ? "Remember" : "Forgot"}{" your password?"}{" "}
+                    Забыли пароль?{" "}
                     <button
-                        onClick={state === "password" ? () => setState("login") : () => setState("password")}
+                        onClick={() => setState("password")}
                         className="text-blue-400 hover:underline cursor-pointer"
                     >
-                        {state === "password" ? "Get back to login" : "Restore password"}
+                        Восстановить пароль
                     </button>
                 </p>
             }
