@@ -19,9 +19,10 @@ export function AuthForm({ state, setState }: AuthFormProps) {
 
     const actionLabel = heading;
     const formAction = {
-        "login": "/login",
-        "register": "/register",
-        "password": "/reset-password",
+        "login": "login",
+        // TODO: implement this in back-end
+        "register": "users",
+        "password": "reset-password",
     }[state];
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -30,18 +31,29 @@ export function AuthForm({ state, setState }: AuthFormProps) {
         setIsError(false);
 
         const formData = new FormData(e.currentTarget);
-        const response = await fetch(formAction, {
+        const response = await fetch(`/api/v0/${formAction}`, {
             method: "POST",
-            body: formData,
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(Object.fromEntries(formData.entries())),
         });
 
         const data = await response.json();
 
-        if (data.status === "success") {
-            setMessage(data.message);
-            setIsError(false);
+        if (["login", "password"].includes(state)) {
+            setMessage("JSON: " + JSON.stringify(data));
+            setIsError(response.ok && data.status === "success");
+        } else if (state === "register") {
+            if (data.status === "success") {
+                setMessage("Письмо для подтверждения почты успешно отправлено");
+                setIsError(false);
+            } else {
+                setMessage("На сервере произошла неизвестная ошибка. Ответ от сервера: " + JSON.stringify(data));
+                setIsError(true);
+            }
         } else {
-            setMessage(data.message);
+            setMessage(`Недостижимое состояние (${state}) достигнуто. Ответ от сервера: ${JSON.stringify(data)}`);
             setIsError(true);
         }
     };
