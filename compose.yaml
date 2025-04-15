@@ -15,14 +15,23 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --save 60 1 --loglevel warning
   api:
     build: ./api
     depends_on:
       - db
+      - redis
     ports:
       - "42424:42424"
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
+      REDIS_URL: redis://redis:6379
       SMTP_USER: ${SMTP_USER:?error}
       SMTP_PASSWORD: ${SMTP_PASSWORD:?error}
     develop:
@@ -43,3 +52,4 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:

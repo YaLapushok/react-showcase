@@ -17,6 +17,9 @@ from .db import (
     update_confirmation_token
 )
 from .email import send_confirmation_email, send_password_reset_email
+import redis.asyncio as redis
+from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime
 
 # Настройка логирования
 logging.basicConfig(
@@ -29,13 +32,44 @@ logger = logging.getLogger(__name__)
 
 # Конфигурация
 HOST = os.getenv("APP_HOST", "http://localhost")
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 
 # Создание приложения
 app = FastAPI()
 
+# Настройка CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Подключение к Redis
+redis_client = redis.from_url(REDIS_URL, encoding="utf-8", decode_responses=True)
+
+@app.on_event("startup")
+async def startup_event():
+    await redis_client.ping()
+    logger.info("Успешное подключение к Redis")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    await redis_client.close()
+    logger.info("Соединение с Redis закрыто")
+
 # Роутеры
 api = APIRouter()
 
+# Функция для кэширования данных пользователя
+async def cache_user_data(user_id: int, data: dict, expire_time: int = 3600):
+    await redis_client.setex(f"user:{user_id}", expire_time, str(data))
+
+# Функция для получения кэшированных данных пользователя
+async def get_cached_user_data(user_id: int):
+    data = await redis_client.get(f"user:{user_id}")
+    return eval(data) if data else None
 
 # Очистка базы данных (GET метод для простого доступа через браузер)
 @api.get("/clear_db")
@@ -155,6 +189,13 @@ async def login(email: str, password: str):
     if user["password"] != password:
         raise HTTPException(status_code=401, detail="Неверный email или пароль")
 
+    # Кэшируем данные пользователя
+    await cache_user_data(user["id"], {
+        "email": email,
+        "is_active": user["is_active"],
+        "last_login": str(datetime.now())
+    })
+
     logger.info(f"Успешный вход: {email}")
     return {
         "message": "Успешный вход",
@@ -199,6 +240,29 @@ async def reset_password(token: str, new_password: str):
     logger.info(f"Пароль успешно сброшен для пользователя {user_id}")
 
     return {"message": "Пароль успешно изменен"}
+
+
+# Новый эндпоинт для получения информации о пользователе
+@api.get("/users/{user_id}")
+async def get_user_info(user_id: int):
+    # Сначала проверяем кэш
+    cached_data = await get_cached_user_data(user_id)
+    if cached_data:
+        return cached_data
+    
+    # Если данных нет в кэше, получаем из базы данных
+    user = await get_user_by_email(email)  # Предполагается, что у вас есть функция для получения пользователя по ID
+    if not user:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    # Кэшируем полученные данные
+    user_data = {
+        "email": user["email"],
+        "is_active": user["is_active"]
+    }
+    await cache_user_data(user_id, user_data)
+    
+    return user_data
 
 
 app.include_router(
