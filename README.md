@@ -17,8 +17,8 @@
 
 1.  **Клонируйте репозиторий:**
     ```bash
-    git clone <URL репозитория>
-    cd <папка проекта>
+    git clone https://github.com/YaLapushok/react-showcase
+    cd react-showcase
     ```
 2.  **Настройте переменные окружения:**
     *   Скопируйте файл `.env.example` (если он есть) или создайте файл `.env` в папке `apps/backend/`.
