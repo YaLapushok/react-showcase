@@ -1,6 +1,6 @@
 import os
 import logging
-from fastapi import FastAPI, HTTPException, APIRouter, BackgroundTasks
+from fastapi import FastAPI, HTTPException, APIRouter, BackgroundTasks, Request
 from .db import (
     UserRegistration,
     does_user_exist,
@@ -174,33 +174,11 @@ async def resend_confirmation(email: str, background_tasks: BackgroundTasks):
 # Вход пользователя
 @api.post("/login")
 async def login(email: str, password: str):
-    logger.info(f"Попытка входа: {email}")
-
-    user = await get_user_by_email(email)
-    if not user:
-        raise HTTPException(status_code=401, detail="Неверный email или пароль")
-
-    if not user["is_active"]:
-        raise HTTPException(
-            status_code=401,
-            detail="Аккаунт не активирован. Пожалуйста, подтвердите email. Если письмо не пришло, запросите повторную отправку."
-        )
-
-    if user["password"] != password:
-        raise HTTPException(status_code=401, detail="Неверный email или пароль")
-
-    # Кэшируем данные пользователя
-    await cache_user_data(user["id"], {
-        "email": email,
-        "is_active": user["is_active"],
-        "last_login": str(datetime.now())
-    })
-
-    logger.info(f"Успешный вход: {email}")
-    return {
-        "message": "Успешный вход",
-        "user_id": user["id"]
-    }
+    # Простая проверка входа
+    for user in users:
+        if user["email"] == email and user["password"] == password:
+            return {"message": "Успешный вход", "redirect": "/homepage"}
+    raise HTTPException(status_code=401, detail="Неверный email или пароль")
 
 
 # Запрос на сброс пароля
