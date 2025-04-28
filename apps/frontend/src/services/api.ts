@@ -2,7 +2,7 @@ import axios, { InternalAxiosRequestConfig, AxiosError, AxiosResponse } from 'ax
 import { useAuthStore } from '../store/authStore'; // Импортируем наш store
 
 const api = axios.create({
-    baseURL: 'http://localhost:5000/api', // Базовый URL нашего бэкенда (изменить, если отличается)
+    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api', // Теперь берём из переменной окружения
     headers: {
         'Content-Type': 'application/json',
     },
