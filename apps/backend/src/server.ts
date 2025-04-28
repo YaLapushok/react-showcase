@@ -19,10 +19,18 @@ const port = process.env.PORT || 5000;
 
 // Инициализация клиента Redis
 // Redis используется для кэширования или других быстрых операций с данными
+
+// Если REDIS_URL не задана, пытаемся собрать URL из REDIS_HOST и REDIS_PORT (с дефолтными значениями).
+const redisUrl = process.env.REDIS_URL || `redis://${process.env.REDIS_HOST || 'redis'}:${process.env.REDIS_PORT || 6379}`;
+
+// Выводим используемый URL Redis в лог для отладки
+console.log(`Используемый Redis URL: ${redisUrl}`);
+
 export const redisClient = createClient({
-    // URL для подключения к Redis. Берется из переменных окружения или используются значения по умолчанию.
-    url: `redis://${process.env.REDIS_HOST || 'redis'}:${process.env.REDIS_PORT || 6379}`
-    // password: process.env.REDIS_PASSWORD // Раскомментировать, если для Redis требуется пароль
+    url: redisUrl
+    // Если ваш Redis на Render требует пароль, он должен быть частью REDIS_URL.
+    // Альтернативно, можно задать пароль отдельно, если библиотека это поддерживает:
+    // password: process.env.REDIS_PASSWORD
 });
 
 // Обработчик ошибок Redis клиента
