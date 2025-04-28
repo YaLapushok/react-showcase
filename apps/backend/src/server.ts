@@ -1,85 +1,100 @@
-import 'reflect-metadata'; // Required for TypeORM
-import express, { Request, Response } from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import { createClient } from 'redis';
-import cron from 'node-cron'; // <--- Импортируем node-cron для демо-задачи
-import { initializeDatabase } from './data-source'; // Импорт инициализатора БД
-import authRoutes from './routes/auth'; // Импорт роутов аутентификации
-import messageRoutes from './routes/messages'; // Импорт роутов сообщений
-// Импортируем новый обработчик для polling
-import { processPendingMessages } from './services/messageService'; 
+import 'reflect-metadata'; // Обязательно для TypeORM, библиотеки для работы с базами данных
+import express, { Request, Response } from 'express'; // Фреймворк для создания веб-сервера
+import cors from 'cors'; // Middleware для разрешения кросс-доменных запросов (CORS)
+import dotenv from 'dotenv'; // Библиотека для загрузки переменных окружения из .env файла
+import { createClient } from 'redis'; // Клиент для подключения к Redis (хранилище ключ-значение в памяти)
+import cron from 'node-cron'; // Библиотека для запуска задач по расписанию (cron jobs)
+import { initializeDatabase } from './data-source'; // Функция для инициализации подключения к базе данных
+import authRoutes from './routes/auth'; // Роуты (маршруты) для аутентификации пользователей
+import messageRoutes from './routes/messages'; // Роуты для обработки сообщений
+import { processPendingMessages } from './services/messageService'; // Функция для обработки ожидающих сообщений
 
-// Load environment variables
-dotenv.config();
+// Загрузка переменных окружения из файла .env
+// dotenv.config(); // Закомментировано, т.к. Render предоставляет переменные окружения напрямую
 
+// Создание экземпляра Express-приложения
 const app = express();
+// Определение порта для сервера. Берется из переменной окружения PORT или используется 5000 по умолчанию.
 const port = process.env.PORT || 5000;
 
-// Инициализация Redis клиента
+// Инициализация клиента Redis
+// Redis используется для кэширования или других быстрых операций с данными
 export const redisClient = createClient({
+    // URL для подключения к Redis. Берется из переменных окружения или используются значения по умолчанию.
     url: `redis://${process.env.REDIS_HOST || 'redis'}:${process.env.REDIS_PORT || 6379}`
-    // password: process.env.REDIS_PASSWORD // Раскомментировать, если есть пароль
+    // password: process.env.REDIS_PASSWORD // Раскомментировать, если для Redis требуется пароль
 });
 
-redisClient.on('error', (err: Error) => console.error('Redis Client Error', err));
-redisClient.on('connect', () => console.log('Connected to Redis'));
+// Обработчик ошибок Redis клиента
+redisClient.on('error', (err: Error) => console.error('Ошибка Redis клиента:', err));
+// Обработчик успешного подключения к Redis
+redisClient.on('connect', () => console.log('Подключено к Redis'));
 
+// Асинхронная функция для запуска сервера
 const startServer = async () => {
     // Подключаемся к Redis
     await redisClient.connect();
 
-    // Подключаемся к БД
-    await initializeDatabase(); 
+    // Инициализируем подключение к базе данных
+    await initializeDatabase();
 
-    // Middleware
-    app.use(cors({ 
-        origin: process.env.CLIENT_URL, // Allow requests from frontend
-        credentials: true // If you need to handle cookies/sessions
+    // Подключение Middleware (промежуточного ПО)
+    // Настройка CORS: разрешаем запросы с фронтенда (URL берется из переменной окружения)
+    app.use(cors({
+        origin: process.env.CLIENT_URL, // Разрешить запросы с этого URL
+        credentials: true // Разрешить передачу cookies/заголовков авторизации
     }));
-    app.use(express.json()); // Parse JSON bodies
+    // Middleware для парсинга JSON-тела запросов
+    app.use(express.json());
 
-    // Routes
+    // Определение Роутов (маршрутов)
+    // Роут для проверки "здоровья" бэкенда
     app.get('/health', (req: Request, res: Response) => {
-        res.status(200).send('Backend is healthy! DB and Redis connected.');
+        res.status(200).send('Бэкенд работает! БД и Redis подключены.');
     });
 
-    // Подключаем роуты аутентификации
+    // Подключаем роуты для аутентификации по префиксу /api/auth
     app.use('/api/auth', authRoutes);
-    // Подключаем роуты сообщений
+    // Подключаем роуты для сообщений по префиксу /api/messages
     app.use('/api/messages', messageRoutes);
 
-    // Запускаем периодический опрос БД для обработки сообщений
-    const pollingInterval = 60000; // Раз в 60 секунд (1 минута)
+    // Запускаем периодическую проверку базы данных для обработки ожидающих сообщений
+    const pollingInterval = 60000; // Интервал: 60000 мс = 60 секунд = 1 минута
     setInterval(() => {
-        console.log(`Triggering message processing cycle (Interval: ${pollingInterval / 1000}s)`);
+        console.log(`Запуск цикла обработки сообщений (Интервал: ${pollingInterval / 1000}с)`);
+        // Вызываем функцию обработки, ловим возможные ошибки
         processPendingMessages().catch(err => {
-             console.error('[ERROR] Uncaught error in processPendingMessages interval:', err);
+             console.error('[ОШИБКА] Неперехваченная ошибка в интервале processPendingMessages:', err);
         });
     }, pollingInterval);
-    console.log(`Started DB polling for pending messages every ${pollingInterval / 1000} seconds.`);
+    console.log(`Запущена проверка БД на ожидающие сообщения каждые ${pollingInterval / 1000} секунд.`);
 
+    // Запуск сервера на прослушивание указанного порта
     app.listen(port, () => {
-        console.log(`Backend server listening on port ${port}`);
-        
-        // --- Демонстрационная Cron Задача --- 
+        console.log(`Сервер бэкенда запущен на порту ${port}`);
+
+        // --- Демонстрационная Cron Задача ---
+        // Пример задачи, выполняющейся по расписанию (каждые 5 минут)
         try {
-            if (cron.validate('*/5 * * * *')) { // Проверяем валидность строки
+            // Проверяем, валиден ли шаблон расписания '*/5 * * * *'
+            if (cron.validate('*/5 * * * *')) {
+                 // Создаем задачу: выводить сообщение в консоль каждые 5 минут
                  cron.schedule('*/5 * * * *', () => {
-                     console.log(`[DUMMY CRON JOB] Heartbeat check running at ${new Date().toISOString()}`);
+                     console.log(`[ДЕМО CRON] Проверка работоспособности запущена в ${new Date().toISOString()}`);
                  });
-                 console.log('[DUMMY CRON JOB] Scheduled heartbeat check to run every 5 minutes.');
+                 console.log('[ДЕМО CRON] Запланирована проверка работоспособности каждые 5 минут.');
             } else {
-                 console.error('[DUMMY CRON JOB] Invalid cron pattern for heartbeat check.');
+                 console.error('[ДЕМО CRON] Неверный шаблон cron для проверки работоспособности.');
             }
         } catch (cronError) {
-             console.error('[DUMMY CRON JOB] Failed to schedule heartbeat check:', cronError);
+             console.error('[ДЕМО CRON] Не удалось запланировать проверку работоспособности:', cronError);
         }
         // --- Конец Демонстрационной Cron Задачи ---
     });
 }
 
+// Запускаем функцию старта сервера и ловим ошибки при запуске
 startServer().catch(error => {
-    console.error("Failed to start the server:", error);
-    process.exit(1);
+    console.error("Не удалось запустить сервер:", error);
+    process.exit(1); // Выход из процесса с кодом ошибки
 }); 
