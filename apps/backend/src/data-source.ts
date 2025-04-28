@@ -9,13 +9,20 @@ import { ScheduledMessage } from './entities/ScheduledMessage'; // Добавл�
 // import { User } from './entities/User';
 // import { MessageHistory } from './entities/MessageHistory';
 
+// Логгируем DATABASE_URL для отладки
+console.log(`DATABASE_URL из окружения: ${process.env.DATABASE_URL}`);
+
 const dataSourceOptions: DataSourceOptions = {
     type: 'postgres',
-    host: process.env.DB_HOST || 'db',
-    port: parseInt(process.env.DB_PORT || '5432', 10),
-    username: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
+    // Приоритет отдаем DATABASE_URL, если он задан (стандарт для Heroku, Render и др.)
+    url: process.env.DATABASE_URL,
+    // Остальные параметры будут использоваться, только если DATABASE_URL не предоставлен
+    host: process.env.DATABASE_URL ? undefined : (process.env.DB_HOST || 'db'),
+    port: process.env.DATABASE_URL ? undefined : parseInt(process.env.DB_PORT || '5432', 10),
+    username: process.env.DATABASE_URL ? undefined : process.env.DB_USER,
+    password: process.env.DATABASE_URL ? undefined : process.env.DB_PASSWORD,
+    database: process.env.DATABASE_URL ? undefined : process.env.DB_NAME,
+    ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : undefined, // Включаем SSL для удаленных БД (Render обычно требует)
     synchronize: true, // В разработке можно true, для production лучше использовать миграции (false)
     logging: false, // Можно включить для отладки SQL запросов
     entities: [User, MessageHistory, ScheduledMessage], // Явно перечисляем сущности

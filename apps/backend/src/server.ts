@@ -17,8 +17,8 @@ const app = express();
 // Определение порта для сервера. Берется из переменной окружения PORT или используется 5000 по умолчанию.
 const port = process.env.PORT || 5000;
 
-// Инициализация клиента Redis
-// Redis используется для кэширования или других быстрых операций с данными
+// Логгируем переменную PORT для проверки переменных окружения
+console.log(`Используемый PORT: ${port}`);
 
 // Если REDIS_URL не задана, пытаемся собрать URL из REDIS_HOST и REDIS_PORT (с дефолтными значениями).
 const redisUrl = process.env.REDIS_URL || `redis://${process.env.REDIS_HOST || 'redis'}:${process.env.REDIS_PORT || 6379}`;
