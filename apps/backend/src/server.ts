@@ -7,6 +7,7 @@ import cron from 'node-cron'; // Библиотека для запуска за
 import { initializeDatabase } from './data-source'; // Функция для инициализации подключения к базе данных
 import authRoutes from './routes/auth'; // Роуты (маршруты) для аутентификации пользователей
 import messageRoutes from './routes/messages'; // Роуты для обработки сообщений
+import deviceRoutes from './routes/device'; // --- НОВОЕ: Роуты для взаимодействия с устройством ---
 import { processPendingMessages } from './services/messageService'; // Функция для обработки ожидающих сообщений
 
 // Загрузка переменных окружения из файла .env
@@ -65,6 +66,8 @@ const startServer = async () => {
     app.use('/api/auth', authRoutes);
     // Подключаем роуты для сообщений по префиксу /api/messages
     app.use('/api/messages', messageRoutes);
+    // --- НОВОЕ: Подключаем роуты для устройства по префиксу /api/device ---
+    app.use('/api/device', deviceRoutes);
 
     // Запускаем периодическую проверку базы данных для обработки ожидающих сообщений
     const pollingInterval = 60000; // Интервал: 60000 мс = 60 секунд = 1 минута

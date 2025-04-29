@@ -22,7 +22,7 @@ const dataSourceOptions: DataSourceOptions = {
     username: process.env.DATABASE_URL ? undefined : process.env.DB_USER,
     password: process.env.DATABASE_URL ? undefined : process.env.DB_PASSWORD,
     database: process.env.DATABASE_URL ? undefined : process.env.DB_NAME,
-    ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : undefined, // Включаем SSL для удаленных БД (Render обычно требует)
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false, // Включаем SSL только в production
     synchronize: true, // В разработке можно true, для production лучше использовать миграции (false)
     logging: false, // Можно включить для отладки SQL запросов
     entities: [User, MessageHistory, ScheduledMessage], // Явно перечисляем сущности

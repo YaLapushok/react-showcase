@@ -10,6 +10,7 @@ import HomePage from './pages/HomePage'; // Изменен импорт
 import VerifyEmailPage from './pages/VerifyEmailPage'; // Изменен импорт
 import ForgotPasswordPage from './pages/ForgotPasswordPage'; // Изменен импорт
 import ResetPasswordPage from './pages/ResetPasswordPage'; // Изменен импорт
+import DeviceControlPage from './pages/DeviceControlPage'; // --- НОВОЕ: Импорт страницы управления устройством ---
 
 // Placeholder Pages
 // const HomePage = () => <div className="p-4">Home Page (Protected)</div>; // Убрали старый плейсхолдер
@@ -53,14 +54,19 @@ function App() {
 
           {/* Показываем Logout только если аутентифицирован */} 
           {isAuthenticated && (
-            <li>
-              <button 
-                onClick={handleLogout}
-                className="text-red-600 hover:text-red-800 bg-transparent border-none cursor-pointer"
-              >
-                Logout
-              </button>
-            </li>
+            <>
+             <li><Link to="/" className="text-blue-600 hover:text-blue-800">Home</Link></li>
+             {/* --- НОВОЕ: Ссылка на страницу управления устройством (только для авторизованных) --- */}
+             <li><Link to="/device-control" className="text-purple-600 hover:text-purple-800">Device Control</Link></li>
+             <li>
+               <button 
+                 onClick={handleLogout}
+                 className="text-red-600 hover:text-red-800 bg-transparent border-none cursor-pointer"
+               >
+                 Logout
+               </button>
+             </li>
+            </>
           )}
         </ul>
       </nav>
@@ -72,6 +78,16 @@ function App() {
           <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+          
+          {/* --- НОВОЕ: Роут для страницы управления устройством (защищенный) --- */}
+          <Route
+            path="/device-control"
+            element={
+              <ProtectedRoute>
+                <DeviceControlPage />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/"
