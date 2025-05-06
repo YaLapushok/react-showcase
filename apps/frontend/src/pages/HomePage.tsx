@@ -42,10 +42,17 @@ export default function HomePage() {
     }
   };
 
-  // Загружаем историю при монтировании компонента
+  // Загружаем историю при монтировании компонента и устанавливаем интервал
   useEffect(() => {
-    fetchHistory();
-  }, []);
+    fetchHistory(); // Загружаем историю при первом рендере
+
+    const intervalId = setInterval(() => {
+      fetchHistory(); // Обновляем историю каждые 60 секунд
+    }, 60000); // 60000 мс = 1 минута
+
+    // Очищаем интервал при размонтировании компонента
+    return () => clearInterval(intervalId);
+  }, []); // Пустой массив зависимостей гарантирует, что эффект запустится один раз
 
   // Обработчик отправки формы планирования
   const handleScheduleSubmit = async (e: React.FormEvent) => {
@@ -81,6 +88,8 @@ export default function HomePage() {
       // Используем displayCronFrequency в сообщении об успехе
       setScheduleSuccess(`Сообщение успешно запланировано на ${selectedDateTime.toLocaleString()} (Cron для истории: ${displayCronFrequency})`);
       setMessageText(''); 
+      // Обновляем историю после успешного планирования
+      fetchHistory(); 
     } catch (err) {
       console.error('Error scheduling message:', err);
       const axiosError = err as AxiosError<{ message: string }>;

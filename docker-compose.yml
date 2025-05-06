@@ -6,9 +6,11 @@ services:
       context: ./apps/backend
       dockerfile: Dockerfile
     container_name: backend_service
+    env_file:
+      - ./apps/backend/.env
     environment:
       NODE_ENV: development
-      PORT: 5000
+      PORT: ${PORT:-5000}
       JWT_SECRET: ${JWT_SECRET:-7a3b9d8c1e5f6a2b4d8e1f0a}
       DATABASE_URL: postgresql://${DB_USER:-user}:${DB_PASSWORD:-password}@${DB_HOST:-db}:${DB_PORT:-5432}/${DB_NAME:-email_scheduler_db}
       REDIS_URL: redis://${REDIS_HOST:-redis}:${REDIS_PORT:-6379}
