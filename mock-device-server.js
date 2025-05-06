@@ -13,7 +13,7 @@ const server = net.createServer((socket) => {
     // Событие 'data' - срабатывает, когда получаем данные от клиента (нашего бэкенда)
     socket.on('data', (data) => {
         const command = data.toString().trim(); // Преобразуем буфер в строку и убираем лишние пробелы/переводы строк
-        console.log(`[Mock Device] Получена команда: '${command}'`);
+        console.log(`[Mock Device] Получена команда от ${socket.remoteAddress}:${socket.remotePort}: '${command}'`);
 
         let response = '';
 
@@ -32,7 +32,7 @@ const server = net.createServer((socket) => {
 
         // Отправляем ответ обратно клиенту (бэкенду)
         socket.write(response);
-        console.log(`[Mock Device] Отправлен ответ: '${response.trim()}'`);
+        console.log(`[Mock Device] Отправлен ответ от ${socket.remoteAddress}:${socket.remotePort}: '${response.trim()}'`);
     });
 
     // Событие 'close' - срабатывает, когда клиент отключается
@@ -42,7 +42,7 @@ const server = net.createServer((socket) => {
 
     // Событие 'error' - обработка ошибок сокета
     socket.on('error', (err) => {
-        console.error('[Mock Device] Ошибка сокета:', err.message);
+        console.error(`[Mock Device] Ошибка сокета клиента ${socket.remoteAddress}:${socket.remotePort}:`, err.message);
     });
 });
 
