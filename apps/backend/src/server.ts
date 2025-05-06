@@ -44,6 +44,10 @@ const startServer = async () => {
     // Подключаемся к Redis
     await redisClient.connect();
 
+    await redisClient.set("example_key", "2025-05-06");
+    const value = await redisClient.get("example_key");
+    console.info(`Прочитанное значение "example_key": ${value}`);
+
     // Инициализируем подключение к базе данных
     await initializeDatabase();
 
