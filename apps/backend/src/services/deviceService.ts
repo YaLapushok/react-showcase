@@ -22,7 +22,11 @@ export const sendCommandToDevice = (command: string): Promise<DeviceResponse[]> 
         
         // Список устройств для симуляции
         const devices = [
-            { host: DEVICE_HOST, port: DEVICE_PORT }
+            { host: DEVICE_HOST, port: DEVICE_PORT },      // Основное устройство
+            { host: DEVICE_HOST, port: DEVICE_PORT + 1 },  // Дополнительное устройство 1
+            { host: DEVICE_HOST, port: DEVICE_PORT + 2 },  // Дополнительное устройство 2
+            { host: DEVICE_HOST, port: DEVICE_PORT + 3 },  // Дополнительное устройство 3
+            { host: DEVICE_HOST, port: DEVICE_PORT + 4 }   // Дополнительное устройство 4
         ];
 
         const responses: DeviceResponse[] = [];
