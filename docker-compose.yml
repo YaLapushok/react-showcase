@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   backend:
+    restart: always
     build:
       context: ./apps/backend
       dockerfile: Dockerfile
@@ -29,6 +30,7 @@ services:
       - app-network
 
   frontend:
+    restart: always
     build:
       context: ./apps/frontend
       dockerfile: Dockerfile
@@ -41,6 +43,7 @@ services:
       - app-network
 
   db:
+    restart: always
     image: postgres:15
     container_name: postgres_db
     environment:
@@ -55,6 +58,7 @@ services:
       - app-network
 
   redis:
+    restart: always
     image: redis:7-alpine
     container_name: redis_cache
     ports:
@@ -63,6 +67,7 @@ services:
       - app-network
 
   mock-device:
+    restart: always
     build:
       context: .
       dockerfile: Dockerfile.mock
