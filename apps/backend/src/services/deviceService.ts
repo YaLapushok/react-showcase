@@ -22,14 +22,11 @@ export const sendCommandToDevice = (command: string): Promise<DeviceResponse[]> 
         
         // Список устройств для симуляции
         const devices = [
-            { host: DEVICE_HOST, port: DEVICE_PORT },
-            { host: DEVICE_HOST, port: DEVICE_PORT + 1 },
-            { host: DEVICE_HOST, port: DEVICE_PORT + 2 }
+            { host: DEVICE_HOST, port: DEVICE_PORT }
         ];
 
         const responses: DeviceResponse[] = [];
         let completedConnections = 0;
-        let hasError = false;
 
         devices.forEach(device => {
             const client = new net.Socket();
@@ -52,10 +49,7 @@ export const sendCommandToDevice = (command: string): Promise<DeviceResponse[]> 
                 
                 if (error) {
                     console.error(`[DeviceService] Ошибка для ${device.host}:${device.port}: ${error.message}`);
-                    if (!hasError) {
-                        hasError = true;
-                        reject(error);
-                    }
+                    // Не отклоняем промис при ошибке подключения, просто пропускаем устройство
                 } else if (responseData) {
                     console.log(`[DeviceService] Успешно получен ответ от ${device.host}:${device.port}: ${responseData.trim()}`);
                     responses.push({
@@ -68,7 +62,8 @@ export const sendCommandToDevice = (command: string): Promise<DeviceResponse[]> 
                 }
 
                 completedConnections++;
-                if (completedConnections === devices.length && !hasError) {
+                if (completedConnections === devices.length) {
+                    // Разрешаем промис с ответами от доступных устройств
                     resolve(responses);
                 }
             };
