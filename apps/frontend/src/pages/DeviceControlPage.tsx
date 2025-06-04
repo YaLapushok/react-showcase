@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
 import api from '../services/api'; // Наш настроенный Axios
 
+interface DeviceResponse {
+    address: string;
+    port: number;
+    response: string;
+}
+
 function DeviceControlPage() {
     const [command, setCommand] = useState<string>(''); // Состояние для команды ввода
-    const [response, setResponse] = useState<string | null>(null); // Состояние для ответа
+    const [response, setResponse] = useState<DeviceResponse[] | null>(null); // Состояние для ответа
     const [error, setError] = useState<string | null>(null); // Состояние для ошибки
     const [loading, setLoading] = useState<boolean>(false); // Состояние загрузки
 
@@ -20,12 +26,12 @@ function DeviceControlPage() {
 
         try {
             // Отправляем POST-запрос на наш новый эндпоинт
-            const result = await api.post<{ success: boolean; response?: string; message?: string }>('/device/command', {
+            const result = await api.post<{ success: boolean; response?: DeviceResponse[]; message?: string }>('/device/command', {
                 command: command, // Передаем команду в теле запроса
             });
 
             if (result.data.success) {
-                setResponse(result.data.response || 'Успешно, но ответ пустой.');
+                setResponse(result.data.response || []);
             } else {
                 setError(result.data.message || 'Произошла неизвестная ошибка на бэкенде.');
             }
@@ -36,6 +42,19 @@ function DeviceControlPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const formatResponse = (responses: DeviceResponse[]) => {
+        return responses.map((resp, index) => (
+            <div key={index} className="mb-2">
+                <div className="font-semibold text-gray-700">
+                    Устройство {resp.address}:{resp.port}
+                </div>
+                <div className="text-gray-600">
+                    Ответ: {resp.response}
+                </div>
+            </div>
+        ));
     };
 
     return (
@@ -66,21 +85,23 @@ function DeviceControlPage() {
                     {loading ? 'Отправка...' : 'Отправить команду'}
                 </button>
 
-                {(response || error) && (
-                    <div className="mt-6 p-4 rounded-md bg-gray-50 border border-gray-200">
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">Ответ:</h3>
-                        {response && (
-                            <pre className="text-sm text-green-700 bg-green-50 p-3 rounded whitespace-pre-wrap break-words">
-                                {response}
-                            </pre>
-                        )}
-                        {error && (
-                            <pre className="text-sm text-red-700 bg-red-50 p-3 rounded whitespace-pre-wrap break-words">
-                                {error}
-                            </pre>
-                        )}
-                    </div>
-                )}
+                <div className="mt-6 p-4 rounded-md bg-gray-50 border border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Ответ:</h3>
+                    {response && response.length > 0 ? (
+                        <div className="text-sm text-green-700 bg-green-50 p-3 rounded">
+                            {formatResponse(response)}
+                        </div>
+                    ) : response && response.length === 0 ? (
+                        <div className="text-sm text-yellow-700 bg-yellow-50 p-3 rounded">
+                            Команда выполнена, но ответы от устройств не получены
+                        </div>
+                    ) : null}
+                    {error && (
+                        <div className="text-sm text-red-700 bg-red-50 p-3 rounded mt-2">
+                            {error}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
